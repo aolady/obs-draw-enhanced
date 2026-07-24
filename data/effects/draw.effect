@@ -52,35 +52,59 @@ float4 apply_color(float4 color, float4 orig)
 
 float4 draw_line(float2 coord, float2 from, float2 to, float4 color, float distance_factor, float4 orig)
 {
+	// Anti-aliasing: at least 1.5 pixels of smooth edge transition
+	// This eliminates jagged edges on thin lines
+	float aa_width = max(1.5, tool_size * 0.25);
+
 	float d = distance(coord, to);
 	float effective_alpha = 0.0;
-	if (d <= tool_size)
+
+	// Endpoint circle with smoothstep anti-aliasing
+	if (d <= tool_size + aa_width)
 	{
-		effective_alpha = color.a - (color.a * (d / tool_size) * distance_factor);
+		float edge = 1.0 - smoothstep(tool_size - aa_width, tool_size + aa_width, d);
+		effective_alpha = color.a * edge;
+		// Apply inner softness (distance_factor) on top of edge AA
+		if (distance_factor > 0.0 && d < tool_size)
+			effective_alpha *= 1.0 - (d / tool_size) * distance_factor;
 	}
+
 	if (from.x >= 0.0 && from.y >= 0.0 && (from.x != 0.0 || from.y != 0.0))
 	{
 		float2 lineDir = from - to;
 		float2 perpDir = float2(lineDir.y, -lineDir.x);
 		float2 dirToPt1 = to - coord;
 		float ld = abs(dot(normalize(perpDir), dirToPt1));
-		if (ld <= tool_size)
+
+		// Line body segment with smoothstep anti-aliasing
+		if (ld <= tool_size + aa_width)
 		{
 			float dp = distance(coord, from);
-			if (dp <= tool_size)
+			if (dp <= tool_size + aa_width)
 			{
+				float edge = 1.0 - smoothstep(tool_size - aa_width, tool_size + aa_width, dp);
+				float alpha = color.a * edge;
+				if (distance_factor > 0.0 && dp < tool_size)
+					alpha *= 1.0 - (dp / tool_size) * distance_factor;
+
 				if (color.a < 0.0)
-					effective_alpha = min(color.a - (color.a * (dp / tool_size) * distance_factor), effective_alpha);
+					effective_alpha = min(alpha, effective_alpha);
 				else
-					effective_alpha = max(color.a - (color.a * (dp / tool_size) * distance_factor), effective_alpha);
+					effective_alpha = max(alpha, effective_alpha);
 			}
 			float md = distance(from, to);
 			if (dp < md && d < md)
 			{
+				// Line body with smoothstep anti-aliasing on perpendicular edges
+				float edge = 1.0 - smoothstep(tool_size - aa_width, tool_size + aa_width, ld);
+				float alpha = color.a * edge;
+				if (distance_factor > 0.0 && ld < tool_size)
+					alpha *= 1.0 - (ld / tool_size) * distance_factor;
+
 				if (color.a < 0.0)
-					effective_alpha = min(color.a - (color.a * (ld / tool_size) * distance_factor), effective_alpha);
+					effective_alpha = min(alpha, effective_alpha);
 				else
-					effective_alpha = max(color.a - (color.a * (ld / tool_size) * distance_factor), effective_alpha);
+					effective_alpha = max(alpha, effective_alpha);
 			}
 		}
 	}
@@ -89,12 +113,14 @@ float4 draw_line(float2 coord, float2 from, float2 to, float4 color, float dista
 
 float4 draw_dot_line(float2 coord, float2 from, float2 to, float4 orig)
 {
+	float aa_width = max(1.5, tool_size * 0.25);
 	float d = distance(coord, to);
 	float effective_alpha = 0.0;
 	float3 color = float3(1, 1, 1);
-	if (d <= tool_size)
+	if (d <= tool_size + aa_width)
 	{
-		effective_alpha = 1.0;
+		float edge = 1.0 - smoothstep(tool_size - aa_width, tool_size + aa_width, d);
+		effective_alpha = edge;
 	}
 	else if (from.x >= 0.0 && from.y >= 0.0)
 	{
@@ -102,19 +128,21 @@ float4 draw_dot_line(float2 coord, float2 from, float2 to, float4 orig)
 		float2 perpDir = float2(lineDir.y, -lineDir.x);
 		float2 dirToPt1 = to - coord;
 		float ld = abs(dot(normalize(perpDir), dirToPt1));
-		if (ld <= tool_size)
+		if (ld <= tool_size + aa_width)
 		{
 			float dp = distance(coord, from);
-			if (dp <= tool_size)
+			if (dp <= tool_size + aa_width)
 			{
-				effective_alpha = max(1.0, effective_alpha);
+				float edge = 1.0 - smoothstep(tool_size - aa_width, tool_size + aa_width, dp);
+				effective_alpha = max(edge, effective_alpha);
 			}
 			else
 			{
 				float md = distance(from, to);
 				if (dp < md && d < md)
 				{
-					effective_alpha = max(1.0, effective_alpha);
+					float edge = 1.0 - smoothstep(tool_size - aa_width, tool_size + aa_width, ld);
+					effective_alpha = max(edge, effective_alpha);
 
 					float v = md - d;
 					float v2 = v - (tool_size * 8.0) * floor(v / (tool_size * 8.0));
