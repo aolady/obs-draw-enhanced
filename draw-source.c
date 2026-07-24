@@ -61,12 +61,36 @@ struct draw_source {
 	uint64_t last_tick;
 	bool clear_on_transition;
 	float since_last_move;
+	float smoothing;
+	struct vec2 raw_pos;
 };
 
 const char *ds_get_name(void *data)
 {
 	UNUSED_PARAMETER(data);
 	return obs_module_text("Draw");
+}
+
+/*
+ * Stroke smoothing: exponential moving average to reduce hand shake.
+ * smoothing=0.0: off (raw input). 0.5: moderate. 1.0: maximum.
+ * Dynamic catch-up: fast during broad strokes, slow for fine detail.
+ */
+static void smooth_position(struct draw_source *ds)
+{
+	if (ds->smoothing <= 0.001f)
+		return;
+
+	float dx = ds->mouse_pos.x - ds->raw_pos.x;
+	float dy = ds->mouse_pos.y - ds->raw_pos.y;
+	float dist = sqrtf(dx * dx + dy * dy);
+
+	float speed = fminf(dist / 15.0f, 1.0f);
+	float catchup = ds->smoothing * 0.15f + speed * (1.0f - ds->smoothing) * 0.4f;
+	catchup = fminf(catchup, 1.0f);
+
+	ds->mouse_pos.x = ds->raw_pos.x + dx * catchup;
+	ds->mouse_pos.y = ds->raw_pos.y + dy * catchup;
 }
 
 static void draw_effect(struct draw_source *ds, gs_texture_t *tex, bool mouse)
@@ -241,11 +265,15 @@ void tablet_proc_handler(void *data, calldata_t *cd)
 	double pressure = calldata_float(cd, "pressure");
 	if (pressure > 0.0 && draw) {
 		ds->mouse_previous_pos = ds->mouse_pos;
+		ds->raw_pos = ds->mouse_pos;
 	}
 	ds->mouse_pos.x = (float)calldata_int(cd, "posx");
 	ds->mouse_pos.y = (float)calldata_int(cd, "posy");
 	ds->mouse_active = pressure > 0.0;
-	ds->shift_down = false; //((event->modifiers & INTERACT_SHIFT_KEY) == INTERACT_SHIFT_KEY);
+	ds->shift_down = false;
+
+	if (ds->mouse_active && draw)
+		smooth_position(ds);
 
 	ds->tablet_factor = draw ? (float)pressure : 1.0f;
 	if (ds->mouse_active && ds->tool_mode != TOOL_UP && draw) {
@@ -301,6 +329,7 @@ static void *ds_create(obs_data_t *settings, obs_source_t *source)
 	context->source = source;
 
 	context->tablet_factor = 1.0f;
+	context->smoothing = 0.4f;
 	context->max_undo = 10;
 	context->size.x = (float)obs_data_get_int(settings, "width");
 	context->size.y = (float)obs_data_get_int(settings, "height");
@@ -467,22 +496,21 @@ static void ds_mouse_move(void *data, const struct obs_mouse_event *event, bool 
 {
 	struct draw_source *ds = data;
 	ds->since_last_move = 0.0f;
-	//if (context->pen_down && (context->mouse_x != event->x || context->mouse_y != event->y)) {
-	//}
 	if (!mouse_leave && draw_on_mouse_move(ds->tool)) {
 		ds->mouse_previous_pos = ds->mouse_pos;
+		ds->raw_pos = ds->mouse_pos;
 	}
 	ds->mouse_pos.x = (float)event->x;
 	ds->mouse_pos.y = (float)event->y;
 	ds->mouse_active = !mouse_leave;
 	ds->shift_down = ((event->modifiers & INTERACT_SHIFT_KEY) == INTERACT_SHIFT_KEY);
 
+	if (ds->mouse_active && draw_on_mouse_move(ds->tool))
+		smooth_position(ds);
+
 	if (ds->mouse_active && ds->tool_mode != TOOL_UP && draw_on_mouse_move(ds->tool)) {
 		apply_tool(ds);
 	}
-
-	//if (mouse_leave)
-	//    context->tool_down = false;
 }
 
 void ds_mouse_click(void *data, const struct obs_mouse_event *event, int32_t type, bool mouse_up, uint32_t click_count)
