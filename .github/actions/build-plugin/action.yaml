@@ -87,6 +87,8 @@ runs:
     - name: Run Windows Build
       if: runner.os == 'Windows'
       shell: pwsh
+      env:
+        CMAKE_TLS_VERIFY: '0'
       run: |
         # Run Windows Build
         if ( $Env:RUNNER_DEBUG -ne $null ) {
