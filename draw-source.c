@@ -801,8 +801,15 @@ static obs_properties_t *ds_get_properties(void *data)
 
 static void ds_get_defaults(obs_data_t *settings)
 {
-	obs_data_set_default_int(settings, "width", 200);
-	obs_data_set_default_int(settings, "height", 200);
+	struct obs_video_info ovi;
+	int width = 1920;
+	int height = 1080;
+	if (obs_get_video_info(&ovi)) {
+		width = (int)ovi.base_width;
+		height = (int)ovi.base_height;
+	}
+	obs_data_set_default_int(settings, "width", width);
+	obs_data_set_default_int(settings, "height", height);
 	obs_data_set_default_double(settings, "tool_size", 10.0);
 	obs_data_set_default_int(settings, "cursor_color", 0xFFFFFF00);
 	obs_data_set_default_int(settings, "tool_color", 0xFF0000FF);
