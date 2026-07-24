@@ -37,9 +37,9 @@
         }
     },
     "name": "draw-dock",
-    "displayName": "Draw",
-    "version": "0.3.1",
-    "author": "Exeldro",
+    "displayName": "Draw Enhanced",
+    "version": "1.0.0",
+    "author": "Exeldro, aolady",
     "website": "https://exeldro.com",
     "email": "exelsor@hotmail.com",
     "uuids": {
