@@ -81,6 +81,12 @@ static void smooth_position(struct draw_source *ds)
 	if (ds->smoothing <= 0.001f)
 		return;
 
+	/* First touch: snap raw_pos to current position */
+	if (ds->raw_pos.x == 0.0f && ds->raw_pos.y == 0.0f) {
+		ds->raw_pos = ds->mouse_pos;
+		return;
+	}
+
 	float dx = ds->mouse_pos.x - ds->raw_pos.x;
 	float dy = ds->mouse_pos.y - ds->raw_pos.y;
 	float dist = sqrtf(dx * dx + dy * dy);
@@ -330,6 +336,7 @@ static void *ds_create(obs_data_t *settings, obs_source_t *source)
 
 	context->tablet_factor = 1.0f;
 	context->smoothing = 0.4f;
+	vec2_zero(&context->raw_pos);
 	context->max_undo = 10;
 	context->size.x = (float)obs_data_get_int(settings, "width");
 	context->size.y = (float)obs_data_get_int(settings, "height");
