@@ -260,7 +260,8 @@ void redo_proc_handler(void *data, calldata_t *cd)
 
 static bool draw_on_mouse_move(uint32_t tool)
 {
-	return tool == TOOL_PENCIL || tool == TOOL_BRUSH || tool == TOOL_STAMP;
+	return tool == TOOL_PENCIL || tool == TOOL_BRUSH ||
+	       tool == TOOL_STAMP || tool == TOOL_ERASER;
 }
 
 void tablet_proc_handler(void *data, calldata_t *cd)

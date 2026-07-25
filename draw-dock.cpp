@@ -636,6 +636,7 @@ DrawDock::DrawDock(QWidget *_parent) : QFrame(_parent), eventFilter(BuildEventFi
 	toolCombo->addItem(CreateToolIcon(demoColor, TOOL_NONE), obs_module_text("None"), QVariant(TOOL_NONE));
 	toolCombo->addItem(CreateToolIcon(demoColor, TOOL_PENCIL), obs_module_text("Pencil"), QVariant(TOOL_PENCIL));
 	toolCombo->addItem(CreateToolIcon(demoColor, TOOL_BRUSH), obs_module_text("Brush"), QVariant(TOOL_BRUSH));
+	toolCombo->addItem(CreateToolIcon(demoColor, TOOL_ERASER), obs_module_text("Eraser"), QVariant(TOOL_ERASER));
 	toolCombo->addItem(CreateToolIcon(demoColor, TOOL_LINE), obs_module_text("Line"), QVariant(TOOL_LINE));
 	toolCombo->addItem(CreateToolIcon(demoColor, TOOL_RECTANGLE_OUTLINE), obs_module_text("RectangleOutline"),
 			   QVariant(TOOL_RECTANGLE_OUTLINE));
@@ -2060,6 +2061,14 @@ QIcon DrawDock::CreateToolIcon(QColor toolColor, uint32_t tool, double alpha, do
 			painter.setPen(QPen(c, toolSize - step, Qt::SolidLine, Qt::RoundCap));
 			painter.drawPath(path);
 		}
+	} else if (tool == TOOL_ERASER) {
+		auto painter = QPainter(&pixmap);
+		painter.setRenderHint(QPainter::Antialiasing);
+		painter.setPen(Qt::NoPen);
+		painter.setBrush(QColor(240, 180, 180));
+		painter.drawRoundedRect(QRectF(20, 60, 180, 100), 20, 20);
+		painter.setBrush(QColor(255, 255, 255));
+		painter.drawRoundedRect(QRectF(20, 60, 180, 60), 20, 20);
 	} else if (tool == TOOL_LINE) {
 		auto painter = QPainter(&pixmap);
 		painter.setPen(QPen(toolColor, toolSize, Qt::SolidLine, Qt::RoundCap));

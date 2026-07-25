@@ -272,6 +272,10 @@ float4 PSDraw(VertInOut vert_in) : TARGET
 	{
 		return draw_line(coord, uv_mouse_previous, uv_mouse, tool_color, 1.0, orig);
 	}
+	else if (tool == 12) // eraser
+	{
+		return draw_line(coord, uv_mouse_previous, uv_mouse, float4(0, 0, 0, -1.0), 1.0, orig);
+	}
 	else if (tool == 3)//line
 	{
 		if (shift_down)
