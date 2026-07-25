@@ -1918,8 +1918,9 @@ void DrawDock::DrawSourceUpdate()
 		return;
 
 	int tool = (int)obs_data_get_int(settings, "tool");
-	if (toolCombo->currentIndex() != tool)
-		toolCombo->setCurrentIndex(tool);
+	int idx = toolCombo->findData(tool);
+	if (idx >= 0 && toolCombo->currentIndex() != idx)
+		toolCombo->setCurrentIndex(idx);
 	auto toolColor = obs_data_get_int(settings, "tool_color");
 	QColor color = color_from_int(toolColor);
 	auto w = toolbar->widgetForAction(colorAction);
