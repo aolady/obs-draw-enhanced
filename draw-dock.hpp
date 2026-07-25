@@ -9,6 +9,7 @@
 #include <QMouseEvent>
 #include <QPushButton>
 #include <QToolBar>
+#include <QToolButton>
 
 typedef std::function<bool(QObject *, QEvent *)> EventFilterFunc;
 

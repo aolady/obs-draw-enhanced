@@ -751,7 +751,8 @@ DrawDock::DrawDock(QWidget *_parent) : QFrame(_parent), eventFilter(BuildEventFi
 	{
 		auto addSwatch = [this](QPushButton *&btn, long long &colorRef) {
 			btn = new QPushButton;
-			btn->setFixedSize(22, 22);
+			btn->setFixedSize(20, 20);
+			btn->setToolTip(QString::fromUtf8(obs_module_text("ToolColor")));
 			btn->setContextMenuPolicy(Qt::CustomContextMenu);
 			QObject::connect(btn, &QPushButton::clicked, [this, &colorRef] {
 				if (!draw_source) return;
@@ -867,7 +868,12 @@ DrawDock::DrawDock(QWidget *_parent) : QFrame(_parent), eventFilter(BuildEventFi
 
 	toolbar->addSeparator();
 	clearAction = toolbar->addAction(QString::fromUtf8(obs_module_text("Clear")), [this] { ClearDraw(); });
-	toolbar->addAction(QString::fromUtf8(obs_module_text("Undo")), [this] {
+	if (auto *cb = toolbar->widgetForAction(clearAction)) {
+		cb->setObjectName(QStringLiteral("drawClearButton"));
+		static_cast<QToolButton *>(cb)->setToolButtonStyle(Qt::ToolButtonTextOnly);
+	}
+
+	auto *undoAction = toolbar->addAction(QString::fromUtf8(obs_module_text("Undo")), [this] {
 		if (draw_source) {
 			proc_handler_t *ph = obs_source_get_proc_handler(draw_source);
 			calldata_t d = {};
@@ -880,12 +886,12 @@ DrawDock::DrawDock(QWidget *_parent) : QFrame(_parent), eventFilter(BuildEventFi
 		if (!scene) return;
 		obs_scene_enum_items(scene, scene_undo, nullptr);
 	});
+	if (auto *ub = toolbar->widgetForAction(undoAction))
+		static_cast<QToolButton *>(ub)->setToolButtonStyle(Qt::ToolButtonTextOnly);
 
 	// Set object names for theming support
 	if (auto *colorButton = toolbar->widgetForAction(colorAction))
 		colorButton->setObjectName(QStringLiteral("drawColorButton"));
-	if (auto *clearButton = toolbar->widgetForAction(clearAction))
-		clearButton->setObjectName(QStringLiteral("drawClearButton"));
 
 	preview->setObjectName(QStringLiteral("preview"));
 	preview->setMinimumSize(QSize(24, 24));
