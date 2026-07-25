@@ -669,9 +669,7 @@ DrawDock::DrawDock(QWidget *_parent) : QFrame(_parent), eventFilter(BuildEventFi
 		} else {
 			imageAction->setVisible(false);
 			colorAction->setVisible(true);
-		}
-		toolSizeSpin->setVisible(tool != TOOL_ERASER);
-		eraserSizeSpin->setVisible(tool == TOOL_ERASER);
+			}
 		if (!draw_source)
 			return;
 		obs_data_t *settings = obs_source_get_settings(draw_source);
@@ -749,7 +747,7 @@ DrawDock::DrawDock(QWidget *_parent) : QFrame(_parent), eventFilter(BuildEventFi
 	// Quick color swatches
 	swatchColor1 = 0xFF0000FF; // red
 	swatchColor2 = 0x000000FF; // black
-	swatchColor3 = 0x0000FFFF; // blue
+	swatchColor3 = 0x00FFFFFF; // yellow
 	{
 		auto addSwatch = [this](QPushButton *&btn, long long &colorRef) {
 			btn = new QPushButton;
@@ -808,11 +806,19 @@ DrawDock::DrawDock(QWidget *_parent) : QFrame(_parent), eventFilter(BuildEventFi
 
 	toolbar->addWidget(toolSizeSpin);
 
+	alphaSpin = new QDoubleSpinBox;
+	alphaSpin->setRange(0.0, 100.0);
+	alphaSpin->setSuffix("%");
+	alphaSpin->setValue(50.0);
+	toolbar->addWidget(alphaSpin);
+
+	eraseCheckbox = new QCheckBox(QString::fromUtf8(obs_module_text("Erase")));
+	toolbar->addWidget(eraseCheckbox);
+
 	eraserSizeSpin = new QDoubleSpinBox;
 	eraserSizeSpin->setRange(0.0, 1000.0);
 	eraserSizeSpin->setSuffix("px");
 	eraserSizeSpin->setValue(25.0);
-	eraserSizeSpin->setVisible(false);
 	connect(eraserSizeSpin, &QDoubleSpinBox::valueChanged, [this] {
 		if (!draw_source) return;
 		double size = eraserSizeSpin->value();
@@ -822,15 +828,6 @@ DrawDock::DrawDock(QWidget *_parent) : QFrame(_parent), eventFilter(BuildEventFi
 		obs_data_release(settings);
 	});
 	toolbar->addWidget(eraserSizeSpin);
-
-	alphaSpin = new QDoubleSpinBox;
-	alphaSpin->setRange(0.0, 100.0);
-	alphaSpin->setSuffix("%");
-	alphaSpin->setValue(50.0);
-	toolbar->addWidget(alphaSpin);
-
-	eraseCheckbox = new QCheckBox(QString::fromUtf8(obs_module_text("Erase")));
-	toolbar->addWidget(eraseCheckbox);
 
 	auto alphaChange = [this] {
 		if (!draw_source)
