@@ -51,6 +51,7 @@ struct draw_source {
 	gs_image_file4_t *tool_image;
 	struct vec4 tool_color;
 	float tool_size;
+	float eraser_size;
 	float tablet_factor;
 
 	struct vec4 cursor_color;
@@ -115,7 +116,8 @@ static void draw_effect(struct draw_source *ds, gs_texture_t *tex, bool mouse)
 	gs_effect_set_int(ds->tool_param, ds->tool);
 	gs_effect_set_texture(ds->tool_image_param, ds->tool_image ? ds->tool_image->image3.image2.image.texture : NULL);
 	gs_effect_set_vec4(ds->tool_color_param, &ds->tool_color);
-	gs_effect_set_float(ds->tool_size_param, ds->tool_size * ds->tablet_factor);
+	gs_effect_set_float(ds->tool_size_param,
+			    (ds->tool == TOOL_ERASER ? ds->eraser_size : ds->tool_size) * ds->tablet_factor);
 	gs_effect_set_int(ds->tool_mode_param, ds->tool_mode);
 	gs_effect_set_bool(ds->shift_down_param, ds->shift_down);
 	gs_effect_set_texture(ds->image_param, tex);
@@ -617,6 +619,7 @@ static void ds_update(void *data, obs_data_t *settings)
 	vec4_from_rgba(&context->tool_color, (uint32_t)obs_data_get_int(settings, "tool_color"));
 	context->tool_color.w = (float)obs_data_get_double(settings, "tool_alpha") / 100.0f;
 	context->tool_size = (float)obs_data_get_double(settings, "tool_size");
+	context->eraser_size = (float)obs_data_get_double(settings, "eraser_size");
 
 	if (!context->render_a || !context->render_b) {
 		obs_enter_graphics();
@@ -812,6 +815,7 @@ static void ds_get_defaults(obs_data_t *settings)
 	obs_data_set_default_int(settings, "width", width);
 	obs_data_set_default_int(settings, "height", height);
 	obs_data_set_default_double(settings, "tool_size", 10.0);
+	obs_data_set_default_double(settings, "eraser_size", 25.0);
 	obs_data_set_default_int(settings, "cursor_color", 0xFFFFFF00);
 	obs_data_set_default_int(settings, "tool_color", 0xFF0000FF);
 	obs_data_set_default_double(settings, "tool_alpha", 100.0);

@@ -763,6 +763,21 @@ DrawDock::DrawDock(QWidget *_parent) : QFrame(_parent), eventFilter(BuildEventFi
 
 	toolbar->addWidget(toolSizeSpin);
 
+	eraserSizeSpin = new QDoubleSpinBox;
+	eraserSizeSpin->setRange(0.0, 1000.0);
+	eraserSizeSpin->setSuffix("px");
+	eraserSizeSpin->setValue(25.0);
+	eraserSizeSpin->setVisible(false);
+	connect(eraserSizeSpin, &QDoubleSpinBox::valueChanged, [this] {
+		if (!draw_source) return;
+		double size = eraserSizeSpin->value();
+		obs_data_t *settings = obs_data_create();
+		obs_data_set_double(settings, "eraser_size", size);
+		obs_source_update(draw_source, settings);
+		obs_data_release(settings);
+	});
+	toolbar->addWidget(eraserSizeSpin);
+
 	alphaSpin = new QDoubleSpinBox;
 	alphaSpin->setRange(0.0, 100.0);
 	alphaSpin->setSuffix("%");

@@ -7,6 +7,7 @@
 #include <QDoubleSpinBox>
 #include <QFrame>
 #include <QMouseEvent>
+#include <QPushButton>
 #include <QToolBar>
 
 typedef std::function<bool(QObject *, QEvent *)> EventFilterFunc;
@@ -40,8 +41,16 @@ private:
 	QAction *imageAction;
 	QAction *clearAction;
 	QDoubleSpinBox *toolSizeSpin;
+	QDoubleSpinBox *eraserSizeSpin;
 	QDoubleSpinBox *alphaSpin;
 	QCheckBox *eraseCheckbox;
+
+	QPushButton *colorSwatch1;
+	QPushButton *colorSwatch2;
+	QPushButton *colorSwatch3;
+	long long swatchColor1;
+	long long swatchColor2;
+	long long swatchColor3;
 
 	obs_data_t *config;
 	std::map<obs_hotkey_id, std::pair<QAction *, obs_data_t *>> favoriteToolHotkeys;
