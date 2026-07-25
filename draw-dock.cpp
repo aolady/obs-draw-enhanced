@@ -814,6 +814,7 @@ DrawDock::DrawDock(QWidget *_parent) : QFrame(_parent), eventFilter(BuildEventFi
 	toolbar->addWidget(alphaSpin);
 
 	eraseCheckbox = new QCheckBox(QString::fromUtf8(obs_module_text("Erase")));
+	eraseCheckbox->setChecked(false);
 	toolbar->addWidget(eraseCheckbox);
 
 	{
@@ -867,13 +868,14 @@ DrawDock::DrawDock(QWidget *_parent) : QFrame(_parent), eventFilter(BuildEventFi
 #endif
 
 	toolbar->addSeparator();
-	clearAction = toolbar->addAction(QString::fromUtf8(obs_module_text("Clear")), [this] { ClearDraw(); });
-	if (auto *cb = toolbar->widgetForAction(clearAction)) {
-		cb->setObjectName(QStringLiteral("drawClearButton"));
-		static_cast<QToolButton *>(cb)->setToolButtonStyle(Qt::ToolButtonTextOnly);
-	}
 
-	auto *undoAction = toolbar->addAction(QString::fromUtf8(obs_module_text("Undo")), [this] {
+	auto *clearBtn = new QPushButton(QString::fromUtf8(obs_module_text("Clear")));
+	clearBtn->setObjectName(QStringLiteral("drawClearButton"));
+	QObject::connect(clearBtn, &QPushButton::clicked, [this] { ClearDraw(); });
+	toolbar->addWidget(clearBtn);
+
+	auto *undoBtn = new QPushButton(QString::fromUtf8(obs_module_text("Undo")));
+	QObject::connect(undoBtn, &QPushButton::clicked, [this] {
 		if (draw_source) {
 			proc_handler_t *ph = obs_source_get_proc_handler(draw_source);
 			calldata_t d = {};
@@ -886,8 +888,7 @@ DrawDock::DrawDock(QWidget *_parent) : QFrame(_parent), eventFilter(BuildEventFi
 		if (!scene) return;
 		obs_scene_enum_items(scene, scene_undo, nullptr);
 	});
-	if (auto *ub = toolbar->widgetForAction(undoAction))
-		static_cast<QToolButton *>(ub)->setToolButtonStyle(Qt::ToolButtonTextOnly);
+	toolbar->addWidget(undoBtn);
 
 	// Set object names for theming support
 	if (auto *colorButton = toolbar->widgetForAction(colorAction))
