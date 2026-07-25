@@ -745,9 +745,9 @@ DrawDock::DrawDock(QWidget *_parent) : QFrame(_parent), eventFilter(BuildEventFi
 	imageAction->setVisible(false);
 
 	// Quick color swatches
-	swatchColor1 = 0x000000FF; // black
+	swatchColor1 = 0xFF000000; // black
 	swatchColor2 = 0xFF0000FF; // red
-	swatchColor3 = 0x00FFFFFF; // yellow
+	swatchColor3 = 0xFF00FFFF; // yellow
 	{
 		auto addSwatch = [this](QPushButton *&btn, long long &colorRef) {
 			btn = new QPushButton;
