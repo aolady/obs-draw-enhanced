@@ -815,6 +815,12 @@ DrawDock::DrawDock(QWidget *_parent) : QFrame(_parent), eventFilter(BuildEventFi
 	eraseCheckbox = new QCheckBox(QString::fromUtf8(obs_module_text("Erase")));
 	toolbar->addWidget(eraseCheckbox);
 
+	{
+		auto *spacer = new QWidget;
+		spacer->setFixedWidth(6);
+		toolbar->addWidget(spacer);
+	}
+
 	eraserSizeSpin = new QDoubleSpinBox;
 	eraserSizeSpin->setRange(0.0, 1000.0);
 	eraserSizeSpin->setSuffix("px");
@@ -861,6 +867,19 @@ DrawDock::DrawDock(QWidget *_parent) : QFrame(_parent), eventFilter(BuildEventFi
 
 	toolbar->addSeparator();
 	clearAction = toolbar->addAction(QString::fromUtf8(obs_module_text("Clear")), [this] { ClearDraw(); });
+	toolbar->addAction(QString::fromUtf8(obs_module_text("Undo")), [this] {
+		if (draw_source) {
+			proc_handler_t *ph = obs_source_get_proc_handler(draw_source);
+			calldata_t d = {};
+			proc_handler_call(ph, "undo", &d);
+		}
+		obs_source_t *scene_source = obs_frontend_get_current_scene();
+		if (!scene_source) return;
+		obs_scene_t *scene = obs_scene_from_source(scene_source);
+		obs_source_release(scene_source);
+		if (!scene) return;
+		obs_scene_enum_items(scene, scene_undo, nullptr);
+	});
 
 	// Set object names for theming support
 	if (auto *colorButton = toolbar->widgetForAction(colorAction))
