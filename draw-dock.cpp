@@ -745,6 +745,41 @@ DrawDock::DrawDock(QWidget *_parent) : QFrame(_parent), eventFilter(BuildEventFi
 		obs_scene_enum_items(scene, scene_tool_image, (void *)fileName.toUtf8().constData());
 	});
 	imageAction->setVisible(false);
+
+	// Quick color swatches
+	swatchColor1 = 0xFF0000FF; // red
+	swatchColor2 = 0x000000FF; // black
+	swatchColor3 = 0x0000FFFF; // blue
+	{
+		auto addSwatch = [this](QPushButton *&btn, long long &colorRef) {
+			btn = new QPushButton;
+			btn->setFixedSize(22, 22);
+			btn->setContextMenuPolicy(Qt::CustomContextMenu);
+			QObject::connect(btn, &QPushButton::clicked, [this, &colorRef] {
+				if (!draw_source) return;
+				obs_data_t *s = obs_data_create();
+				obs_data_set_int(s, "tool_color", (int)colorRef);
+				obs_source_update(draw_source, s);
+				obs_data_release(s);
+			});
+			QObject::connect(btn, &QPushButton::customContextMenuRequested, [this, &colorRef, btn] {
+				QColor c = color_from_int(colorRef);
+				c = QColorDialog::getColor(c, this, QString::fromUtf8(obs_module_text("ToolColor")));
+				if (c.isValid()) {
+					colorRef = color_to_int(c);
+					UpdateSwatchColor(btn, colorRef);
+				}
+			});
+			toolbar->addWidget(btn);
+		};
+		addSwatch(colorSwatch1, swatchColor1);
+		addSwatch(colorSwatch2, swatchColor2);
+		addSwatch(colorSwatch3, swatchColor3);
+		UpdateSwatchColor(colorSwatch1, swatchColor1);
+		UpdateSwatchColor(colorSwatch2, swatchColor2);
+		UpdateSwatchColor(colorSwatch3, swatchColor3);
+	}
+
 	toolSizeSpin = new QDoubleSpinBox;
 	toolSizeSpin->setRange(0.0, 1000.0);
 	toolSizeSpin->setSuffix("px");
@@ -828,43 +863,6 @@ DrawDock::DrawDock(QWidget *_parent) : QFrame(_parent), eventFilter(BuildEventFi
 #endif
 
 	toolbar->addSeparator();
-
-	// Quick color swatches
-	swatchColor1 = 0xFF0000FF; // red
-	swatchColor2 = 0x000000FF; // black
-	swatchColor3 = 0x0000FFFF; // blue
-
-	auto makeSwatch = [this](QPushButton *&btn, long long &colorRef) {
-		btn = new QPushButton;
-		btn->setFixedSize(24, 24);
-		btn->setStyleSheet("border: 1px solid #888; border-radius: 2px;");
-		btn->setContextMenuPolicy(Qt::CustomContextMenu);
-		QObject::connect(btn, &QPushButton::clicked, [this, &colorRef] {
-			if (!draw_source) return;
-			obs_data_t *s = obs_data_create();
-			obs_data_set_int(s, "tool_color", (int)colorRef);
-			obs_source_update(draw_source, s);
-			obs_data_release(s);
-		});
-		QObject::connect(btn, &QPushButton::customContextMenuRequested, [this, &colorRef, btn] {
-			QColor c = color_from_int(colorRef);
-			c = QColorDialog::getColor(c, this, QString::fromUtf8(obs_module_text("ToolColor")));
-			if (c.isValid()) {
-				colorRef = color_to_int(c);
-				UpdateSwatchColor(btn, colorRef);
-			}
-		});
-		toolbar->addWidget(btn);
-	};
-
-	makeSwatch(colorSwatch1, swatchColor1);
-	makeSwatch(colorSwatch2, swatchColor2);
-	makeSwatch(colorSwatch3, swatchColor3);
-
-	UpdateSwatchColor(colorSwatch1, swatchColor1);
-	UpdateSwatchColor(colorSwatch2, swatchColor2);
-	UpdateSwatchColor(colorSwatch3, swatchColor3);
-
 	clearAction = toolbar->addAction(QString::fromUtf8(obs_module_text("Clear")), [this] { ClearDraw(); });
 
 	// Set object names for theming support
