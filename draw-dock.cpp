@@ -662,6 +662,8 @@ DrawDock::DrawDock(QWidget *_parent) : QFrame(_parent), eventFilter(BuildEventFi
 			imageAction->setVisible(false);
 			colorAction->setVisible(true);
 		}
+		toolSizeSpin->setVisible(tool != TOOL_ERASER);
+		eraserSizeSpin->setVisible(tool == TOOL_ERASER);
 		if (!draw_source)
 			return;
 		obs_data_t *settings = obs_source_get_settings(draw_source);
