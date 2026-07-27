@@ -339,6 +339,7 @@ static void *ds_create(obs_data_t *settings, obs_source_t *source)
 
 	context->tablet_factor = 1.0f;
 	context->smoothing = 0.4f;
+	context->eraser_size = 25.0f;
 	vec2_zero(&context->raw_pos);
 	context->max_undo = 10;
 	context->size.x = (float)obs_data_get_int(settings, "width");
