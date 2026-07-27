@@ -117,7 +117,10 @@ static void draw_effect(struct draw_source *ds, gs_texture_t *tex, bool mouse)
 	gs_effect_set_texture(ds->tool_image_param, ds->tool_image ? ds->tool_image->image3.image2.image.texture : NULL);
 	gs_effect_set_vec4(ds->tool_color_param, &ds->tool_color);
 	gs_effect_set_float(ds->tool_size_param,
-			    (ds->tool == TOOL_ERASER ? ds->eraser_size : ds->tool_size) * ds->tablet_factor);
+			    (ds->tool == TOOL_ERASER || ds->tool_color.w < 0.0f
+				     ? ds->eraser_size
+				     : ds->tool_size) *
+				    ds->tablet_factor);
 	gs_effect_set_int(ds->tool_mode_param, ds->tool_mode);
 	gs_effect_set_bool(ds->shift_down_param, ds->shift_down);
 	gs_effect_set_texture(ds->image_param, tex);
