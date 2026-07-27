@@ -1940,6 +1940,10 @@ void DrawDock::DrawSourceUpdate()
 	if (abs(toolSizeSpin->value() - size) > 0.1)
 		toolSizeSpin->setValue(size);
 
+	auto eraserSize = obs_data_get_double(settings, "eraser_size");
+	if (abs(eraserSizeSpin->value() - eraserSize) > 0.1)
+		eraserSizeSpin->setValue(eraserSize);
+
 	auto alpha = obs_data_get_double(settings, "tool_alpha");
 	auto erase = alpha < 0.0;
 	if (eraseCheckbox->isChecked() != erase)
