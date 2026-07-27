@@ -830,9 +830,11 @@ DrawDock::DrawDock(QWidget *_parent) : QFrame(_parent), eventFilter(BuildEventFi
 	connect(eraserSizeSpin, &QDoubleSpinBox::valueChanged, [this] {
 		if (!draw_source) return;
 		double size = eraserSizeSpin->value();
-		obs_data_t *settings = obs_data_create();
-		obs_data_set_double(settings, "eraser_size", size);
-		obs_source_update(draw_source, settings);
+		obs_data_t *settings = obs_source_get_settings(draw_source);
+		if (abs(obs_data_get_double(settings, "eraser_size") - size) > 0.1) {
+			obs_data_set_double(settings, "eraser_size", size);
+			obs_source_update(draw_source, settings);
+		}
 		obs_data_release(settings);
 	});
 	toolbar->addWidget(eraserSizeSpin);
